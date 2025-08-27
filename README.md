@@ -1,68 +1,82 @@
-# CodeIgniter 4 Application Starter
+# TodoList - CodeIgniter 4 + Docker
 
-## What is CodeIgniter?
+Proyecto de ejemplo de una aplicación de tareas usando **CodeIgniter 4**, **PostgreSQL**, **Nginx**, **Docker** y **DataTables**.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+---
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+## Requisitos
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+Para un correcto funcionamiento debe tener las siguientes herramientas en las versiones detalladas
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+- [Docker](https://www.docker.com/get-started) >= 24
+- [Docker Compose](https://docs.docker.com/compose/install/) >= 2.17
+- Navegador moderno
+- (Opcional) [Composer](https://getcomposer.org/) para instalar dependencias locales
 
-## Installation & updates
+---
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+## Instalación
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+1. **Clonar el repositorio**
+```bash
+git clone https://github.com/eduardo19940331/tasks-codeigniter.git todolist
+cd todolist
+```
 
-## Setup
+2. **Copiar y pegar .env.example**
+```bash
+mv .env.example .env
+```
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+3. **Construimos las imagenes y contenedores**
+```bash
+docker-compose build
+```
 
-## Important Change with index.php
+4. **Levantamos los contenedores**
+```bash
+docker-compose up -d
+```
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+5. **Verificar el estado de los contenedores**
+```bash
+docker-compose ps
+```
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+Deberías ver codeigniter_app, codeigniter_nginx y codeigniter_db corriendo
 
-**Please** read the user guide for a better explanation of how CI4 works!
+6. **Base de Datos**
+Base de datos: PostgresSql, la configuración por defecto se encuentra en app/Config/Database.php en el compartimiento que los creadores de codeigniter dejaron exclusivamente para PostgresSQL y usa:
+```bash
+Host: 'db', # -> localhost para conectarse desde fuera
+Username: 'ciuser',
+Password: 'secret',
+Database: 'todolist',
+```
+Si necesita mas detalle de la configuracion, revisar el archivo antes mencionado.
 
-## Repository Management
+7. **Migraciones**
+Para crear la BD y la tabla de tareas, ejecute:
+```bash
+docker exec -it codeigniter_app php spark migrate
+```
+Esto instancia el contenedor de php y ejecuta el comando para ejecutar la migracion
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+8. **Endpoints**
+La aplicacion consta de los siguientes endpoint
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+- GET /tasks: Obtiene y retorna una lista de todas las tareas en formato JSON.
+- GET /tasks/{id}: Obtiene y retorna una tarea específica por su ID en formato JSON.
+- POST /tasks: Crea una nueva tarea.
+- PUT /tasks/{id}: Actualiza una tarea existente.
+- DELETE /tasks/{id}: Elimina una tarea por su ID
+- POST /tasks/action: Cambia el estado de una tarea.
 
-## Server Requirements
+(este ultimo enpoint me atrevi a realizarlo para que la tabla tambien tuviera un poco de dinamismo en esa columna)
 
-PHP version 8.1 or higher is required, with the following extensions installed:
-
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
-
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+9. **Test**
+Para ejecutar los test se hace con el siguiente comando.
+```bash
+docker exec -it codeigniter_app vendor/bin/phpunit
+```
+Los test tienen codigo que ejecutan las migraciones a los contenedores respectivos y crean este ambiente de pruebas
