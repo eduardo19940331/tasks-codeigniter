@@ -13,14 +13,32 @@ class TaskController extends BaseController
         'title' => 'required|min_length[3]|max_length[255]'
     ];
 
+    /**
+     * Obtiene todas el listado de las tareas en el sistema
+     * 
+     * returns them as a JSON response.
+     * 
+     * @return ResponseInterface respuesta formato JSON.
+     */
     public function index(): ResponseInterface
     {
-        $tasks = $this->model->findAll();
+        $tasks = $this->model
+            ->orderBy('completed', 'ASC')
+            ->orderBy('created_at', 'ASC')
+            ->findAll();
 
         return $this->response->setJSON($tasks);
     }
 
-    public function show(?int $id = null)
+    /**
+     * obtiene la tarea segun el identificador que llegue por parametro
+     * returns it as a JSON response, or a 404 error
+     * 
+     * @param id The `show` parametro id para devolver la tarea
+     * 
+     * @return ResponseInterface respuesta formato JSON.
+     */
+    public function show(?int $id = null): ResponseInterface
     {
         $task = $this->model->find($id);
         if (!$task) {
@@ -30,50 +48,121 @@ class TaskController extends BaseController
         return $this->response->setJSON($task);
     }
 
-    public function store()
+    /**
+     * Registra las nuevas tareas
+     * 
+     * @param Request data de la nueva tarea
+     * 
+     * @return ResponseInterface respuesta formato JSON.
+     */
+    public function store(): ResponseInterface
     {
         $data = $this->request->getJSON(true);
-
-        # Aplica reglas de validacion
         if (!$this->validate($this->rulesValidations)) {
             return $this->failValidationErrors($this->validator->getErrors());
         }
 
-        $task = $this->model->insert($data);
+        $idTask = $this->model->insert($data, true);
+        $task = $this->model->find($idTask);
 
-        return $this->response->setJSON($task);
-        // return $this->respondCreated($task, 'Tarea Creada con exito!');
+        $response = [
+            "task" => $task,
+            "message" => "La tarea se creo correctamente!",
+            "status" => "ok",
+        ];
+
+        return $this->response->setJSON($response);
     }
 
-    public function update(?int $id = null)
+    /**
+     * Actualizar la tarea
+     * 
+     * @param id The `update` identificador de la tarea especifica
+     * @param Request data de la tarea a actualizar
+     * 
+     * @return a JSON response con la data actualizada de la tarea intervenida.
+     */
+    public function update(?int $id = null): ResponseInterface
     {
         $task = $this->model->find($id);
-
         if (!$task) {
             return $this->failNotFound(message: 'Tarea no encontrada');
         }
 
         $data = $this->request->getJSON(true);
-
         if (!$this->validate($this->rulesValidations)) {
             return $this->failValidationErrors($this->validator->getErrors());
         }
 
-        $task = $this->model->update($id, $data);
+        $this->model->update($id, $data);
+        $task = $this->model->find($id);
 
-        return $this->respondUpdated($task, 'Se Actualizo la Tarea Correctamente');
+        $response = [
+            "task" => $task,
+            "message" => "Tarea Actualizada correctamente",
+            "status" => "ok",
+        ];
+
+        return $this->response->setJSON($response);
     }
 
+    /**
+     * Endpoint para el cambio de estado de las tareas
+     * 
+     * @param Request data de la tarea a alterar el estado
+     * 
+     * @return The JSON con la respuesta de la tarea y el mensage de lo realizado
+     */
+    public function action()
+    {
+        $data = $this->request->getJSON(true);
+
+        $id = $data["id"] ?? null;
+        $task = $this->model->find($id);
+        if (empty($task)) {
+            return $this->failNotFound(message: 'Tarea no encontrada');
+        }
+        $action = true;
+        $messageAction = "marcada como Realizada";
+        if ($task["completed"]) {
+            $action = false;
+            $messageAction = "marcada como Pendiente";
+        }
+
+        $this->model->update($id, ["completed" => $action]);
+        $task = $this->model->find($id);
+
+        $response = [
+            "task" => $task,
+            "message" => "Tarea $messageAction",
+            "status" => "ok",
+        ];
+
+        return $this->response->setJSON($response);
+    }
+
+    /**
+     * Endpoint elimina las tareas
+     * 
+     * @param id The `delete` identificador de la tarea a eliminar
+     * 
+     * @return id returns a JSON response identificador de la tarea eliminada.
+     */
     public function delete(?int $id = null)
     {
         $task = $this->model->find($id);
-
         if (!$task) {
             return $this->failNotFound(message: 'Tarea no encontrada');
         }
 
         $this->model->delete($id);
 
-        return $this->respondDeleted('Se elimino la tarea correctamente');
+        $response = [
+            "id" => $id,
+            "message" => "Tarea Eliminada correctamente",
+            "status" => "ok",
+        ];
+
+        return $this->response->setJSON($response);
     }
 }
