@@ -13,4 +13,5 @@ $routes->get('/', 'Home::index');
     $routes->post('/tasks', 'TaskController::store');
     $routes->put('/tasks/(:num)', 'TaskController::update/$1');
     $routes->delete('/tasks/(:num)', 'TaskController::delete/$1');
+    $routes->post('/tasks/action', 'TaskController::action');
 // });

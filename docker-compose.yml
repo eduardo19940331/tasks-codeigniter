@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   app:
@@ -10,6 +9,18 @@ services:
       - .:/var/www/html
     depends_on:
       - db
+  
+  app_test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: codeigniter_app_test
+    environment:
+      CI_ENVIRONMENT: development   # dejamos development
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db_test
 
   web:
     image: nginx:latest
@@ -34,6 +45,19 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+  
+  db_test:
+    image: postgres:15
+    container_name: codeigniter_db_test
+    environment:
+      POSTGRES_DB: todolist_test
+      POSTGRES_USER: ciuser
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_test:/var/lib/postgresql/data
 
 volumes:
   pgdata:
+  pgdata_test:
