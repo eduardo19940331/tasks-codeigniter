@@ -48,32 +48,33 @@ class TaskModel extends Model
     // Callbacks
     protected $allowCallbacks = true;
     protected $beforeInsert   = [];
-    protected $afterInsert    = ['formatAfterInsert'];
+    protected $afterInsert    = [];
     protected $beforeUpdate   = [];
-    protected $afterUpdate    = ['formatAfterUpdate'];
+    protected $afterUpdate    = [];
     protected $beforeFind     = [];
     protected $afterFind      = ['dateFormater'];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-    protected function formatAfterInsert($data)
-    {
-        if (isset($data['id'])) {
-            $task = $this->find($data['id']);
-            $data['result'] = $task;
-        }
+    // protected function formatAfterInsert($data)
+    // {
+    //     if (isset($data['id'])) {
+    //         $task = $this->find($data['id']);
+    //         $data['result'] = $task;
+    //         $data['data'] = $task;
+    //     }
 
-        return $data;
-    }
-    protected function formatAfterUpdate($data)
-    {
-        if (isset($data['id'])) {
-            $task = $this->find($data['id']);
-            $data['result'] = $task;
-        }
+    //     return $data;
+    // }
+    // protected function formatAfterUpdate($data)
+    // {
+    //     if (isset($data['id'])) {
+    //         $task = $this->find($data['id']);
+    //         $data['result'] = $task;
+    //     }
 
-        return $data;
-    }
+    //     return $data;
+    // }
     // Callback: formatea la fecha
     protected function dateFormater($data)
     {
@@ -83,15 +84,26 @@ class TaskModel extends Model
 
         switch ($data['method']) {
             case 'find':
-                $dateFormat = new Date($data['data']['created_at']);
-                $data['data']['created_at'] = $dateFormat::formatEuropean();
-                break;
-            case 'findAll':
-                foreach ($data["data"] as $key => $task) {
-                    $dateFormat = new Date($task['created_at']);
-                    $data['data'][$key]['created_at'] = $dateFormat::formatEuropean();
+                if (is_array($data["id"])) {
+                    $data["data"] = $this->formatDate($data["data"]);
+                } else {
+                    $dateFormat = new Date($data['data']['created_at']);
+                    $data['data']['created_at'] = $dateFormat::formatEuropean();
                 }
                 break;
+            case 'findAll':
+                $data["data"] = $this->formatDate($data["data"]);
+                break;
+        }
+
+        return $data;
+    }
+
+    private function formatDate(array $data): array
+    {
+        foreach ($data as $key => $task) {
+            $dateFormat = new Date($task['created_at']);
+            $data[$key]['created_at'] = $dateFormat::formatEuropean();
         }
 
         return $data;
