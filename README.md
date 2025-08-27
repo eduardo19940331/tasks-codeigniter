@@ -17,9 +17,18 @@ Para un correcto funcionamiento debe tener las siguientes herramientas en las ve
 
 ## Instalación
 
+Desde Linux preferentemente en el directorio /opt creamos /projects
+```bash
+mkdir /opt/projects
+cd /opt/projects
+```
+
 1. **Clonar el repositorio**
 ```bash
-git clone https://github.com/eduardo19940331/tasks-codeigniter.git todolist
+git clone https://github.com/eduardo19940331/tasks-codeigniter.git TodoList
+```
+y nos movemos dentro del proyecto
+```bash
 cd todolist
 ```
 
@@ -42,8 +51,11 @@ docker-compose up -d
 ```bash
 docker-compose ps
 ```
-
 Deberías ver codeigniter_app, codeigniter_nginx y codeigniter_db corriendo
+
+Tambien podemos revisar
+http://localhost:8080/
+no te alarmes si aun no ves la app, continuemos...
 
 6. **Base de Datos**
 Base de datos: PostgresSql, la configuración por defecto se encuentra en app/Config/Database.php en el compartimiento que los creadores de codeigniter dejaron exclusivamente para PostgresSQL y usa:
@@ -55,7 +67,16 @@ Database: 'todolist',
 ```
 Si necesita mas detalle de la configuracion, revisar el archivo antes mencionado.
 
+Ahora deebemos recrear la carpeta vendor y los archivos composer, para eso ejecutamos
+
+```bash
+docker exec -it codeigniter_app composer install
+```
+
+(Si algo sale mal, revisa tus versiones de php y composer, en algunos casos causa conflictos)
+
 7. **Migraciones**
+Una vez con los contenedores funcionando y composer instalado ejecutamos las migraciones
 Para crear la BD y la tabla de tareas, ejecute:
 ```bash
 docker exec -it codeigniter_app php spark migrate
@@ -80,3 +101,5 @@ Para ejecutar los test se hace con el siguiente comando.
 docker exec -it codeigniter_app vendor/bin/phpunit
 ```
 Los test tienen codigo que ejecutan las migraciones a los contenedores respectivos y crean este ambiente de pruebas
+
+Si se presentan inconvenientes con gusto te ayudo!!
